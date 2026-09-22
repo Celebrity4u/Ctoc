@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+  <title>SSE测试</title>
+</head>
+<body>
+<div>sse测试</div>
+<div id="result"></div>
+</body>
+</html>
+<script>
+  function msg(msg) {
+    console.log(msg)
+    var div = document.createElement('div');
+    div.innerHTML = msg;
+    document.getElementById('result').appendChild(div);
+  }
+
+  //判断浏览器是否支持SSE
+  if (!!window.EventSource) {
+    var source = new EventSource('http://192.168.0.188:8089/sysTest/see/subscribe?id=002');
+    source.addEventListener('heartbeat', function (e) {
+      msg(e.data);
+    }, false);
+
+    source.addEventListener('connect', function (e) {
+      msg(e.data);
+    }, false);
+    //响应消息-实现方式2
+    source.addEventListener('message', function (e) {
+      msg(e.data);
+    }, false);
+
+    //响应open事件
+    source.addEventListener('open', function (e) {
+      msg("连接打开.");
+    }, false);
+
+    // 响应close事件，主动关闭EventSource
+    //后端关闭SSE会执行error事件，在error事件中关闭SSE不友好，后端在关闭SSE发送close
+    // 事件以友好的关闭SSE
+    source.addEventListener('close', function (e) {
+      source.close();
+      console.log(e);
+      msg("数据接收完毕，关闭EventSource");
+    }, false);
+
+    //响应error事件
+    source.addEventListener('error', function (e) {
+      if (e.readyState == EventSource.CLOSED) {
+        msg("连接关闭");
+      } else {
+        console.log(e);
+      }
+    }, false);
+
+  } else {
+    console.log("你的浏览器不支持SSE");
+    msg("你的浏览器不支持SSE");
+  }
+
+</script>

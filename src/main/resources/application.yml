@@ -1,0 +1,13 @@
+server:
+  port: 8089  #java服务器端口(如果一台电脑部署多个java服务器时需要修改)
+  ssl:
+    key-alias: ybjt_alias
+    key-store: classpath:ybjt.p12
+    keyStoreType: PKCS12
+    key-store-password: ybjtadmin
+file:
+  httpFilePath: "/api/file/pdf/"
+  fileDataLocalPath: "/files/data/"
+  fileDownLocalPath: "/files/down/"
+  fileUpLocalPath: "/files/up/"
+
