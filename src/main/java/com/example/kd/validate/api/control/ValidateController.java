@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -147,10 +148,11 @@ public class ValidateController {
                 {
                     try {
                         // 甲题走verify_score.exe,乙题走AtCTOC14Main.exe
+                        // 文件名可能含空格(平台按"队伍名_编号_时间戳"命名,如"JUST OK_156_xxx.atk")，
+                        // 用参数列表方式直接启动exe(不经cmd.exe)，避免cmd引号剥离规则把带空格路径拆断
                         String exeName = "2".equals(topicType) ? "AtCTOC14Main.exe" : "verify_score.exe";
-                        String command = exeName + " "+data.getData_path();
-                        // 执行CMD命令并获取输出(超时5分钟,超时时返回null)
-                        List<String> output = CmdExecutor.executeCmd(command, 300);
+                        // 执行命令并获取输出(超时5分钟,超时时返回null)
+                        List<String> output = CmdExecutor.executeCmd(Arrays.asList(exeName, data.getData_path()), 300);
                         System.setProperty("sun.jnu.encoding", "GBK");
                         DataBo dataBo = new DataBo();
                         if(output == null)
@@ -167,6 +169,10 @@ public class ValidateController {
                                 result.setStatus("success");
                                 dataBo.setF1(output.get(1));
                                 dataBo.setF2(output.get(2));
+                            }else if(output.size() == 1 && "Failed to open file".equals(output.get(0))){
+                                // exe打不开文件(文件名异常/文件不完整)时明确提示，不要误导成"答案验证不通过"
+                                result.setStatus("fail");
+                                result.setMessage("验证文件打开失败，请重新提交");
                             }else{
                                 result.setStatus("fail");
                                 result.setMessage(output.size() >= 2 ? output.get(1) : "验证不通过");

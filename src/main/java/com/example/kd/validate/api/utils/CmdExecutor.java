@@ -37,6 +37,21 @@ public class CmdExecutor {
     }
 
     /**
+     * 执行命令并获取输出。参数列表方式：不经过cmd.exe，
+     * 文件路径含空格时不会被cmd的引号剥离规则拆断
+     * (cmd /c 会把首尾引号剥掉,带引号拼串反而出错,如"JUST OK_156_xxx.atk")。
+     *
+     * @param cmdAndArgs     第0个元素为命令(exe名或路径)，后续元素为参数
+     * @param timeoutSeconds 超时秒数,超时返回null
+     */
+    public static List<String> executeCmd(List<String> cmdAndArgs, int timeoutSeconds) throws IOException {
+        ProcessBuilder processBuilder = new ProcessBuilder(cmdAndArgs);
+        // 重定向错误流到输出流，确保错误信息被捕获
+        processBuilder.redirectErrorStream(true);
+        return runProcess(processBuilder, timeoutSeconds);
+    }
+
+    /**
      * 执行CMD命令并获取输出
      *
      * @param command        命令
@@ -53,7 +68,13 @@ public class CmdExecutor {
         ProcessBuilder processBuilder = new ProcessBuilder(cmd);
         // 重定向错误流到输出流，确保错误信息被捕获
         processBuilder.redirectErrorStream(true);
+        return runProcess(processBuilder, timeoutSeconds);
+    }
 
+    /**
+     * 启动进程、后台线程读输出、主线程限时等待、编码探测、按行切分的公共流程
+     */
+    private static List<String> runProcess(ProcessBuilder processBuilder, int timeoutSeconds) throws IOException {
         // 启动进程
         final Process process = processBuilder.start();
 
